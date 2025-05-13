@@ -25,6 +25,11 @@ def get_japanese_font():
 
 jp_font = get_japanese_font()
 
+if jp_font is None:
+    st.error("日本語フォントが見つかりませんでした。")
+else:
+    st.success(f"使用中フォント：{jp_font.get_file()}")
+
 # スタイル調整
 st.markdown("""
 <style>
