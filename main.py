@@ -1,7 +1,6 @@
 import streamlit as st
 import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -14,10 +13,10 @@ from google.oauth2.service_account import Credentials
 # 日本語フォント指定
 def get_japanese_font():
     font_paths = [
-        "/usr/share/fonts/truetype/ipafont-gothic/ipagp.ttf",
+        "/usr/share/fonts/truetype/ipafont-gothic/ipagp.ttf",  # Ubuntu
         "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "C:/Windows/Fonts/meiryo.ttc",
-        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+        "C:/Windows/Fonts/meiryo.ttc",  # Windows
+        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",  # macOS
     ]
     for path in font_paths:
         if os.path.exists(path):
@@ -157,8 +156,10 @@ if sheet:
             cbar_kws={"shrink": 0.6},
             annot_kws={"fontproperties": jp_font} if jp_font else None
         )
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10, fontproperties=jp_font)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=0, fontsize=10, fontproperties=jp_font)
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10,
+                           fontproperties=jp_font)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=0, fontsize=10,
+                           fontproperties=jp_font)
         ax.set_xlabel("曜日", fontproperties=jp_font)
         ax.set_ylabel("時間帯", fontproperties=jp_font)
         st.pyplot(fig)
