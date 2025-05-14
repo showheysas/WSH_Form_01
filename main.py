@@ -4,72 +4,10 @@ import gspread
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import matplotlib.font_manager as fm
 import os
 import re
 import json
 from google.oauth2.service_account import Credentials
-
-# 日本語フォント指定
-def get_japanese_font():
-    font_paths = [
-        "/usr/share/fonts/truetype/ipafont-gothic/ipagp.ttf",  # Ubuntu
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "C:/Windows/Fonts/meiryo.ttc",  # Windows
-        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",  # macOS
-    ]
-    for path in font_paths:
-        if os.path.exists(path):
-            return fm.FontProperties(fname=path)
-    return None
-
-jp_font = get_japanese_font()
-
-if jp_font is None:
-    st.error("日本語フォントが見つかりませんでした。")
-else:
-    st.success(f"使用中フォント：{jp_font.get_file()}")
-
-# スタイル調整
-st.markdown("""
-<style>
-html, body, [class*="css"] {
-    font-family: 'Noto Sans JP', sans-serif;
-    background-color: #fffdf7;
-    color: #3e3221;
-}
-.stButton>button {
-    background-color: #d8bfa0;
-    color: black;
-    border-radius: 10px;
-    padding: 0.5em 1.2em;
-    font-size: 1.1em;
-}
-.stTextInput input, .stTextArea textarea {
-    color: #3e3221;
-    background-color: #fffef8;
-    border-radius: 6px;
-    font-size: 1rem;
-}
-@media (prefers-color-scheme: dark) {
-    html, body, [class*="css"] {
-        background-color: #121212 !important;
-        color: #ffffff !important;
-    }
-    .stTextInput input, .stTextArea textarea {
-        color: #ffffff !important;
-        background-color: #2a2a2a !important;
-        border: 1px solid #444 !important;
-        font-size: 1rem;
-        border-radius: 6px;
-    }
-    .stButton>button {
-        background-color: #e1cbb0 !important;
-        color: #000 !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
 
 # Google Sheets API認証
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -83,6 +21,7 @@ else:
     st.error("Google認証情報が見つかりません。Secretsを設定してください。")
     sheet = None
 
+# UIスタイル
 st.title("週末共有会アンケート！")
 
 st.markdown("""
@@ -93,7 +32,8 @@ Tech0・9期の週末共有会の開催時間を決めるアンケートです�
 ぜひ回答ください！
 """)
 
-days = ["土", "日", "月", "金"]
+# 英語表記の曜日
+days = ["Sat", "Sun", "Mon", "Fri"]
 hours = [f"{h}:00" for h in range(6, 24)]
 column_ratios = [1] + [1] * len(days)
 
@@ -101,11 +41,11 @@ selected_slots = []
 with st.form("time_form"):
     st.write("### 参加しやすい時間帯を選んでください")
 
-    # ヘッダー行（曜日：絵文字で代替強調）
+    # ヘッダー行
     header_cols = st.columns(column_ratios)
     header_cols[0].write(" ")
     for i, day in enumerate(days):
-        label = "🟦 土" if day == "土" else "🟥 日" if day == "日" else day
+        label = "🟦 Sat" if day == "Sat" else "🟥 Sun" if day == "Sun" else day
         header_cols[i + 1].write(f"**{label}**")
 
     # チェックボックスマトリクス
@@ -137,9 +77,9 @@ with st.form("time_form"):
 if sheet:
     try:
         data = sheet.get_all_values()
-        df = pd.DataFrame(data[1:], columns=["日時", "名前", "ご意見・ご感想", "選択"])
+        df = pd.DataFrame(data[1:], columns=["Datetime", "Name", "Feedback", "Selection"])
 
-        all_selected = df["選択"].dropna().apply(lambda x: re.split(r"\s*,\s*", x)).explode().str.replace("～", "").str.strip()
+        all_selected = df["Selection"].dropna().apply(lambda x: re.split(r"\s*,\s*", x)).explode().str.replace("～", "").str.strip()
         counts = all_selected.value_counts()
 
         heatmap_df = pd.DataFrame(0, index=hours, columns=days)
@@ -158,15 +98,12 @@ if sheet:
             fmt="d",
             cmap=cmap,
             ax=ax,
-            cbar_kws={"shrink": 0.6},
-            annot_kws={"fontproperties": jp_font} if jp_font else None
+            cbar_kws={"shrink": 0.6}
         )
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10,
-                           fontproperties=jp_font)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=0, fontsize=10,
-                           fontproperties=jp_font)
-        ax.set_xlabel("曜日", fontproperties=jp_font)
-        ax.set_ylabel("時間帯", fontproperties=jp_font)
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=0, fontsize=10)
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Hour")
         st.pyplot(fig)
 
         st.write(f"回答人数：{df.shape[0]}名")
